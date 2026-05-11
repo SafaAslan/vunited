@@ -1,0 +1,19 @@
+name: Fetch EA Stats
+
+on:
+  schedule:
+    - cron: '*/5 * * * *'
+  workflow_dispatch:
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch and send to Railway
+        run: |
+          DATA=$(curl -s "https://proclubs.ea.com/api/fc/clubs/matches?platform=common-gen5&matchType=leagueMatch&clubIds=1667112")
+          if [ -n "$DATA" ]; then
+            curl -s -X POST https://vunited-production.up.railway.app/api/ingest \
+              -H "Content-Type: application/json" \
+              -d "$DATA"
+          fi
