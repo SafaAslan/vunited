@@ -1,4 +1,4 @@
-from flask import Flask, jsonify, request, send_from_directory
+xfrom flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from datetime import datetime
 import sqlite3, json, threading, time, subprocess, os, urllib.request, ssl
@@ -218,7 +218,7 @@ def static_files(f):
 
 def auto_fetch():
     while True:
-        time.sleep(5)
+        time.sleep(300)
         try:
             ctx = ssl._create_unverified_context()
             req = urllib.request.Request(
