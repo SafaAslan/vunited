@@ -250,7 +250,12 @@ def status():
 
 @app.route("/")
 def index():
-    return send_from_directory(".", "dashboard.html")
+    from flask import make_response
+    resp = make_response(open("dashboard.html", encoding="utf-8").read())
+    resp.headers["Content-Type"] = "text/html; charset=utf-8"
+    resp.headers["Cache-Control"] = "no-store, no-cache, must-revalidate"
+    resp.headers["Pragma"] = "no-cache"
+    return resp
 
 @app.route("/<path:f>")
 def static_files(f):
