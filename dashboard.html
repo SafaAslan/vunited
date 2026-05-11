@@ -387,7 +387,7 @@ function renderAttack(){
     <td>${num(p.freekicks_scored)}</td><td>${num(p.bicycle_kick_goals)}</td>
     <td>${num(p.hat_tricks)}</td><td>${num(p.big_chances_missed)}</td>
     <td>${num(p.penalties_won)}</td><td>${num(p.penalties_missed)}</td>
-    <td>${num(p.touches_in_box)}</td>
+    <td>${num(p.touches_in_box||0)}</td>
   </tr>`).join('');
 }
 
@@ -397,12 +397,12 @@ function renderDefense(){
   const rows=[...allData].filter(p=>p.games>0).sort((a,b)=>b.interceptions-a.interceptions);
   document.getElementById('def-body').innerHTML=rows.map(p=>`<tr>
     <td>${p.player_name}</td><td>${posLabel(p.position)||'—'}</td>
-    <td>${num(p.tackle_attempts)}</td><td>${num(p.tackles_made)}</td><td>${pct(p.tackle_pct)}</td>
-    <td>${num(p.interceptions)}</td><td>${num(p.blocks)}</td><td>${num(p.clearances)}</td>
-    <td>${num(p.aerial_duels_attempted)}</td><td>${num(p.aerial_duels_won)}</td><td>${pct(p.aerial_pct)}</td>
+    <td>${num(p.tackle_att)}</td><td>${num(p.tackle_ok)}</td><td>${pct(p.tackle_pct)}</td>
+    <td>${num(p.ints)}</td><td>${num(p.blocks)}</td><td>${num(p.clears)}</td>
+    <td>${num(p.air_w+p.air_l)}</td><td>${num(p.air_w)}</td><td>${pct(p.aerial_pct)}</td>
     <td>${num(p.headers_won)}</td>
-    <td>${num(p.fouls_committed)}</td><td>${num(p.fouls_won)}</td>
-    <td>${num(p.offsides)}</td><td>${num(p.yellow_cards)}</td>
+    <td>${num(p.fouls)}</td><td>${num(p.fouls_won)}</td>
+    <td>${num(p.offsides||0)}</td><td>${num(p.yc)}</td>
     <td>${num(p.clean_sheet_gk)}</td><td>${num(p.clean_sheet_def)}</td>
   </tr>`).join('');
 }
@@ -415,11 +415,11 @@ function renderPassing(){
     <td>${p.player_name}${posLabel(p.position)}</td>
     <td>${num(p.pass_attempts)}</td><td>${num(p.passes_made)}</td><td>${pct(p.pass_pct)}</td>
     <td>${num(p.long_passes_attempted)}</td><td>${num(p.long_passes_completed)}</td>
-    <td>${num(p.accurate_passes)}</td><td>${num(p.key_passes)}</td><td>${num(p.chances_created)}</td>
+    <td>${num(p.pass_ok)}</td><td>${num(p.kp)}</td><td>${num(p.cc)}</td>
     <td>${num(p.crosses_attempted)}</td><td>${num(p.crosses_completed)}</td>
     <td>${num(p.through_balls)}</td>
-    <td>${num(p.dribbles_attempted)}</td><td>${num(p.dribbles_completed)}</td><td>${pct(p.dribble_pct)}</td>
-    <td>${num(p.possession_lost)}</td><td>${num(p.possession_won)}</td>
+    <td>${num(p.drib_att)}</td><td>${num(p.drib_ok)}</td><td>${pct(p.drib_pct)}</td>
+    <td>${num(p.poss_lost)}</td><td>${num(p.possession_won)}</td>
   </tr>`).join('');
 }
 
@@ -434,7 +434,7 @@ function renderPhysical(){
     <td>${num(p.distance_sprint_km)}</td>
     <td>${num(p.touches)}</td><td>${num(p.possession_won)}</td>
     <td>${num(p.ground_duels_attempted)}</td><td>${num(p.ground_duels_won)}</td>
-    <td>${num(p.aerial_duels_attempted)}</td><td>${num(p.aerial_duels_won)}</td><td>${pct(p.aerial_pct)}</td>
+    <td>${num(p.air_w+p.air_l)}</td><td>${num(p.air_w)}</td><td>${pct(p.aerial_pct)}</td>
     <td>${num(p.duels_lost)}</td><td>${num(p.dispossessed)}</td>
     <td>${p.minutes}</td>
   </tr>`).join('');
@@ -457,10 +457,10 @@ function showPlayerDetail(name, containerId){
     ['Rating',p.avg_rating?p.avg_rating.toFixed(1):'—'],['Galiyet%',pct(p.winrate)],
     ['Gol/maç',p.gpg.toFixed(2)],['Ast/maç',p.apg.toFixed(2)],
     ['Pas%',pct(p.pass_pct)],['Şut%',pct(p.shot_pct)],
-    ['Kilit Pas',p.key_passes],['Araya Girme',p.interceptions],
-    ['Top Kapma',p.tackles_made],['Hava Müc.',p.aerial_duels_won+'/'+p.aerial_duels_attempted],
-    ['Dribling%',pct(p.dribble_pct)],['Sprint',p.sprints],
-    ['Dakika',p.minutes],['Sarı Kart',p.yellow_cards],
+    ['Kilit Pas',p.kp],['Araya Girme',p.ints],
+    ['Top Kapma',p.tackle_ok],['Hava Müc.',p.air_w+'/'+( p.air_w+(p.air_l||0))],
+    ['Dribling%',pct(p.drib_pct)],['Sprint',p.sprints],
+    ['Dakika',p.minutes],['Sarı Kart',p.yc],
   ];
   document.getElementById(containerId).innerHTML=`
     <div class="detail-box">
@@ -518,12 +518,12 @@ async function loadMatchDetail(mid){
                 <td>${p.goals}</td><td>${p.assists}</td>
                 <td>${p.shots}</td><td>${p.shots_on_target||0}</td>
                 <td>${p.pass_attempts}</td><td>${pa>0?pa+'%':'—'}</td>
-                <td>${p.tackles_made}/${p.tackle_attempts}</td>
-                <td>${num(p.interceptions)}</td><td>${num(p.blocks)}</td>
-                <td>${p.dribbles_completed||0}/${p.dribbles_attempted||0}</td>
-                <td>${p.aerial_duels_won||0}/${p.aerial_duels_attempted||0}</td>
-                <td>${num(p.key_passes)}</td><td>${num(p.chances_created)}</td>
-                <td>${num(p.touches_in_box)}</td>
+                <td>${p.tackle_ok}/${p.tackle_att}</td>
+                <td>${num(p.ints)}</td><td>${num(p.blocks)}</td>
+                <td>${p.drib_ok||0}/${p.drib_att||0}</td>
+                <td>${p.air_w||0}/${p.air_w+p.air_l||0}</td>
+                <td>${num(p.kp)}</td><td>${num(p.cc)}</td>
+                <td>${num(p.touches_in_box||0)}</td>
                 <td class="${rClass(parseFloat(p.rating))}">${parseFloat(p.rating).toFixed(1)}</td>
                 <td>${p.motm?'★':''}</td>
               </tr>`;
