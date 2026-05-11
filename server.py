@@ -87,6 +87,8 @@ def store(data):
         cur.execute("INSERT OR IGNORE INTO matches VALUES (?,?,?,?,?,?,?)",
             (mid, m.get("timestamp",0), gf, ga, outcome, opp, json.dumps(m)))
         for pid, pd in m.get("players",{}).get(CLUB_ID,{}).items():
+            if int(pd.get("secondsPlayed", 0)) == 0:
+                continue
             ev = {}
             for k in ["match_event_aggregate_0","match_event_aggregate_1"]:
                 for ek, ev2 in parse_ev(pd.get(k,"")).items():
