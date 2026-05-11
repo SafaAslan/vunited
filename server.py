@@ -7,7 +7,7 @@ app = Flask(__name__, static_folder='.')
 CORS(app)
 
 CLUB_ID = "1667112"
-DB = "stats.db"
+DB = "/app/data/stats.db"
 PORT = 8080
 
 def db():
