@@ -1,4 +1,4 @@
-xfrom flask import Flask, jsonify, request, send_from_directory
+from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from datetime import datetime
 import sqlite3, json, threading, time, subprocess, os, urllib.request, ssl
