@@ -218,7 +218,7 @@ def static_files(f):
 
 def auto_fetch():
     while True:
-        time.sleep(300)
+        time.sleep(5)
         try:
             ctx = ssl._create_unverified_context()
             req = urllib.request.Request(
