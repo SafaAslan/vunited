@@ -219,4 +219,4 @@ def static_files(f):
 if __name__ == "__main__":
     init()
     print(f"Video United FC -> http://localhost:{PORT}")
-    app.run(host="0.0.0.0", port=PORT, debug=False)
+app.run(host="0.0.0.0", port=int(os.environ.get("PORT", PORT)), debug=False)
