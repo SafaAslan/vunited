@@ -40,9 +40,48 @@ def init():
             sprints INTEGER DEFAULT 0, touches INTEGER DEFAULT 0,
             possession_lost INTEGER DEFAULT 0, yellow_cards INTEGER DEFAULT 0,
             own_goals INTEGER DEFAULT 0, fouls_committed INTEGER DEFAULT 0,
-            UNIQUE(match_id, player_name)
+            UNIQUE(match_id, player_name, position)
         );
     """)
+    # Migrate old table if UNIQUE constraint doesn't include position
+    try:
+        con.execute("ALTER TABLE player_stats ADD COLUMN _dummy INTEGER")
+        con.execute("ALTER TABLE player_stats DROP COLUMN _dummy")
+    except:
+        pass
+    # Drop and recreate if old schema (without position in UNIQUE)
+    if os.environ.get("RESET_DB") == "1":
+        con.executescript("""
+            DROP TABLE IF EXISTS player_stats;
+            DROP TABLE IF EXISTS matches;
+        """)
+        con.executescript("""
+            CREATE TABLE IF NOT EXISTS matches (
+                match_id TEXT PRIMARY KEY, timestamp INTEGER,
+                goals_for INTEGER, goals_against INTEGER,
+                outcome TEXT, opponent TEXT, raw_json TEXT
+            );
+            CREATE TABLE IF NOT EXISTS player_stats (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                match_id TEXT, player_name TEXT, position TEXT,
+                goals INTEGER DEFAULT 0, assists INTEGER DEFAULT 0,
+                shots INTEGER DEFAULT 0, pass_attempts INTEGER DEFAULT 0,
+                passes_made INTEGER DEFAULT 0, tackle_attempts INTEGER DEFAULT 0,
+                tackles_made INTEGER DEFAULT 0, rating REAL DEFAULT 0,
+                mom INTEGER DEFAULT 0, seconds_played INTEGER DEFAULT 0,
+                clean_sheet_gk INTEGER DEFAULT 0, clean_sheet_def INTEGER DEFAULT 0,
+                interceptions INTEGER DEFAULT 0, clearances INTEGER DEFAULT 0,
+                blocks INTEGER DEFAULT 0, dribbles_attempted INTEGER DEFAULT 0,
+                dribbles_completed INTEGER DEFAULT 0, key_passes INTEGER DEFAULT 0,
+                chances_created INTEGER DEFAULT 0, aerial_won INTEGER DEFAULT 0,
+                aerial_lost INTEGER DEFAULT 0, headed_goals INTEGER DEFAULT 0,
+                sprints INTEGER DEFAULT 0, touches INTEGER DEFAULT 0,
+                possession_lost INTEGER DEFAULT 0, yellow_cards INTEGER DEFAULT 0,
+                own_goals INTEGER DEFAULT 0, fouls_committed INTEGER DEFAULT 0,
+                UNIQUE(match_id, player_name, position)
+            );
+        """)
+        print("[INIT] Database reset complete")
     con.commit()
     con.close()
 
