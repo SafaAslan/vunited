@@ -1,8 +1,7 @@
-import os
 from flask import Flask, jsonify, request, send_from_directory
 from flask_cors import CORS
 from datetime import datetime
-import sqlite3, json, threading, time, subprocess
+import sqlite3, json, threading, time, subprocess, os, urllib.request, ssl
 
 app = Flask(__name__, static_folder='.')
 CORS(app)
@@ -217,7 +216,30 @@ def index():
 def static_files(f):
     return send_from_directory(".", f)
 
+def auto_fetch():
+    while True:
+        time.sleep(300)
+        try:
+            ctx = ssl._create_unverified_context()
+            req = urllib.request.Request(
+                "https://proclubs.ea.com/api/fc/clubs/matches?platform=common-gen5&matchType=leagueMatch&clubIds=1667112",
+                headers={
+                    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36",
+                    "Accept": "application/json, text/plain, */*",
+                    "Referer": "https://proclubstracker.com/",
+                    "Origin": "https://proclubstracker.com",
+                }
+            )
+            with urllib.request.urlopen(req, timeout=15, context=ctx) as r:
+                data = json.loads(r.read())
+                n = store(data)
+                print(f"[AUTO] {n} new match(es)")
+        except Exception as e:
+            print(f"[AUTO] {e}")
+
 if __name__ == "__main__":
     init()
-    print(f"Video United FC -> http://localhost:{PORT}")
-app.run(host="0.0.0.0", port=int(os.environ.get("PORT", PORT)), debug=False)
+    port = int(os.environ.get("PORT", PORT))
+    threading.Thread(target=auto_fetch, daemon=True).start()
+    print(f"Video United FC -> http://localhost:{port}")
+    app.run(host="0.0.0.0", port=port, debug=False)
