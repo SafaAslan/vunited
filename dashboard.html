@@ -128,6 +128,13 @@ td:first-child{text-align:left;font-weight:500;}
       <option value="3" selected>Min 3 maç</option>
       <option value="10">Min 10 maç</option>
     </select>
+    <select id="ov-pos" onchange="renderOverview()">
+      <option value="">Tüm mevkiler</option>
+      <option value="forward">Forvet</option>
+      <option value="midfielder">Orta Saha</option>
+      <option value="defender">Defans</option>
+      <option value="goalkeeper">Kaleci</option>
+    </select>
     <select id="ov-sort" onchange="ovSetSort(this.value)">
       <option value="games">Maç</option>
       <option value="goals">Gol</option>
@@ -349,7 +356,9 @@ function ovSetSort(k){
 function renderOverview(){
   if(!allData.length) return;
   const min=parseInt(document.getElementById('ov-min').value);
+  const pos=document.getElementById('ov-pos').value;
   let rows=[...allData].filter(p=>p.games>=min);
+  if(pos) rows=rows.filter(p=>p.position===pos);
   rows.sort((a,b)=>{
     const av=a[ovSort],bv=b[ovSort];
     if(typeof av==='string') return ovDir*av.localeCompare(bv,'tr');
