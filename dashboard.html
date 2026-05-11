@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Video United FC — Live Tracker</title>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@400;500;600;700;800&family=Barlow:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#0b0d12;--s1:#13161f;--s2:#1a1e2b;--s3:#222636;
+  --border:rgba(255,255,255,0.07);--border2:rgba(255,255,255,0.13);
+  --text:#e8eaf2;--muted:#656a88;--muted2:#888daa;
+  --green:#2dce89;--blue:#4da6ff;--amber:#f5a623;
+  --purple:#a78bfa;--red:#f06060;--teal:#26c6da;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:var(--bg);color:var(--text);font-family:'Barlow',sans-serif;font-size:14px;}
+
+nav{background:var(--s1);border-bottom:1px solid var(--border2);padding:0 1.5rem;display:flex;align-items:center;overflow-x:auto;position:sticky;top:0;z-index:100;}
+.nav-brand{font-family:'Barlow Condensed',sans-serif;font-size:1.1rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-right:1.5rem;white-space:nowrap;padding:14px 0;}
+.nav-brand span{color:var(--blue);}
+.nav-btn{background:none;border:none;color:var(--muted);font-family:'Barlow',sans-serif;font-size:12px;padding:16px 12px;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:color .15s,border-color .15s;}
+.nav-btn:hover{color:var(--text);}
+.nav-btn.active{color:var(--text);border-bottom-color:var(--blue);}
+
+.section{display:none;padding:1.5rem;max-width:1200px;margin:0 auto;}
+.section.active{display:block;}
+
+.status-bar{background:var(--s2);border:0.5px solid var(--border2);border-radius:8px;padding:9px 14px;display:flex;gap:20px;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center;font-size:12px;}
+.si{display:flex;align-items:center;gap:5px;color:var(--muted2);}
+.si strong{color:var(--text);}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--green);animation:pulse 2s infinite;}
+.dot.off{background:var(--muted);animation:none;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.3;}}
+.fetch-btn{background:var(--blue);color:#fff;border:none;border-radius:6px;padding:5px 14px;font-size:12px;font-family:'Barlow',sans-serif;cursor:pointer;margin-left:auto;}
+.fetch-btn:hover{opacity:.85;}
+.fetch-btn:disabled{background:var(--muted);cursor:default;}
+
+h2{font-family:'Barlow Condensed',sans-serif;font-size:1.5rem;font-weight:700;text-transform:uppercase;letter-spacing:.04em;margin-bottom:.25rem;}
+.desc{font-size:12px;color:var(--muted2);margin-bottom:1.25rem;}
+
+.card{background:var(--s1);border:0.5px solid var(--border2);border-radius:12px;padding:1.25rem 1.5rem;margin-bottom:1rem;}
+.card-title{font-size:10.5px;font-weight:500;text-transform:uppercase;letter-spacing:.07em;color:var(--muted);margin-bottom:.9rem;}
+
+.controls{display:flex;gap:8px;margin-bottom:1rem;flex-wrap:wrap;align-items:center;}
+select,input[type=text]{background:var(--s2);color:var(--text);border:0.5px solid var(--border2);border-radius:6px;padding:6px 10px;font-size:12px;font-family:'Barlow',sans-serif;cursor:pointer;outline:none;}
+select:focus,input:focus{border-color:var(--blue);}
+
+.tbl-scroll{overflow-x:auto;}
+table{width:100%;border-collapse:collapse;font-size:12px;}
+thead th{font-size:10px;font-weight:500;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);padding:7px 8px;border-bottom:0.5px solid var(--border2);text-align:right;white-space:nowrap;cursor:pointer;user-select:none;}
+thead th:first-child{text-align:left;}
+thead th:hover{color:var(--text);}
+thead th.act{color:var(--blue);}
+tbody tr{border-bottom:0.5px solid var(--border);cursor:pointer;transition:background .1s;}
+tbody tr:hover{background:var(--s2);}
+tbody tr:last-child{border-bottom:none;}
+td{padding:7px 8px;text-align:right;vertical-align:middle;}
+td:first-child{text-align:left;font-weight:500;}
+
+.pos-badge{display:inline-block;font-size:9px;font-weight:600;padding:1px 5px;border-radius:3px;margin-left:4px;text-transform:uppercase;vertical-align:middle;}
+.pos-fw{background:rgba(45,206,137,.15);color:var(--green);}
+.pos-mf{background:rgba(77,166,255,.15);color:var(--blue);}
+.pos-df{background:rgba(167,139,250,.15);color:var(--purple);}
+.pos-gk{background:rgba(245,166,35,.15);color:var(--amber);}
+
+.bar-w{display:flex;align-items:center;gap:5px;justify-content:flex-end;}
+.bar-bg{width:40px;height:3px;border-radius:2px;background:rgba(255,255,255,0.07);flex-shrink:0;}
+.bar-f{height:3px;border-radius:2px;}
+
+.rg{color:var(--green);font-weight:500;}
+.rb{color:var(--blue);}
+.ra{color:var(--amber);}
+.rr{color:var(--red);}
+.rm{color:var(--muted);}
+
+.grid-4{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:9px;margin-bottom:1.25rem;}
+.mc{background:var(--s2);border-radius:7px;padding:11px 13px;}
+.mc .lbl{font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);margin-bottom:3px;}
+.mc .val{font-family:'Barlow Condensed',sans-serif;font-size:1.6rem;font-weight:700;line-height:1;}
+
+.badge{display:inline-block;font-size:10px;padding:2px 6px;border-radius:4px;margin-left:3px;vertical-align:middle;}
+.bw{background:rgba(45,206,137,.15);color:var(--green);}
+.bl{background:rgba(240,96,96,.15);color:var(--red);}
+.bd{background:rgba(245,166,35,.15);color:var(--amber);}
+
+.match-row{display:flex;justify-content:space-between;align-items:center;padding:8px 4px;border-bottom:0.5px solid var(--border);cursor:pointer;border-radius:4px;transition:background .1s;}
+.match-row:hover{background:var(--s2);padding-left:8px;}
+.match-row:last-child{border-bottom:none;}
+.match-meta{font-size:11px;color:var(--muted2);}
+
+.detail-box{background:var(--s2);border:0.5px solid var(--border2);border-radius:10px;padding:1.25rem;margin-top:1rem;}
+.close-btn{float:right;background:none;border:none;color:var(--muted);font-size:18px;cursor:pointer;}
+.close-btn:hover{color:var(--text);}
+
+.cat-tabs{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:1rem;}
+.cat-tab{background:var(--s2);border:0.5px solid var(--border2);border-radius:6px;padding:5px 12px;font-size:11px;cursor:pointer;color:var(--muted2);transition:all .15s;}
+.cat-tab:hover{color:var(--text);}
+.cat-tab.active{background:var(--blue);color:#fff;border-color:var(--blue);}
+
+.empty{text-align:center;padding:2.5rem;color:var(--muted);font-size:13px;}
+.loading{text-align:center;padding:1.5rem;color:var(--muted2);}
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-brand">Video United <span>FC</span></div>
+  <button class="nav-btn active" onclick="showTab('overview')">Özet</button>
+  <button class="nav-btn" onclick="showTab('attack')">Hücum</button>
+  <button class="nav-btn" onclick="showTab('defense')">Savunma</button>
+  <button class="nav-btn" onclick="showTab('passing')">Pas & Yaratıcılık</button>
+  <button class="nav-btn" onclick="showTab('physical')">Fiziksel</button>
+  <button class="nav-btn" onclick="showTab('matches')">Maçlar</button>
+</nav>
+
+<!-- OVERVIEW -->
+<div id="tab-overview" class="section active">
+  <h2>Genel Bakış</h2>
+  <p class="desc" id="live-desc">EA API — her 5 dakikada otomatik güncelleme</p>
+  <div class="status-bar" id="status-bar"><div class="si"><span class="dot off"></span>Bağlanıyor...</div></div>
+  </div>
+<div class="grid-4" id="summary-cards"></div>
+
+  <div class="controls">
+    <select id="ov-min" onchange="renderOverview()">
+      <option value="0">Tüm oyuncular</option>
+      <option value="3" selected>Min 3 maç</option>
+      <option value="10">Min 10 maç</option>
+    </select>
+    <select id="ov-sort" onchange="ovSetSort(this.value)">
+      <option value="games">Maç</option>
+      <option value="goals">Gol</option>
+      <option value="assists">Asist</option>
+      <option value="avg_rating">Rating</option>
+      <option value="winrate">Galiyet %</option>
+      <option value="gpg">Gol/maç</option>
+      <option value="apg">Asist/maç</option>
+      <option value="mom">MOTM</option>
+    </select>
+  </div>
+
+  <div class="card">
+    <div class="tbl-scroll">
+      <table id="ov-table">
+        <thead><tr>
+          <th onclick="ovSetSort('player_name')">Oyuncu</th>
+          <th onclick="ovSetSort('games')">Maç</th>
+          <th onclick="ovSetSort('goals')">Gol</th>
+          <th onclick="ovSetSort('assists')">Asist</th>
+          <th onclick="ovSetSort('mom')">MOTM</th>
+          <th onclick="ovSetSort('avg_rating')">Rating</th>
+          <th onclick="ovSetSort('winrate')">Gal%</th>
+          <th onclick="ovSetSort('pass_pct')">Pas%</th>
+          <th onclick="ovSetSort('shot_pct')">Şut%</th>
+          <th onclick="ovSetSort('gpg')">Gol/maç</th>
+          <th onclick="ovSetSort('apg')">Ast/maç</th>
+          <th onclick="ovSetSort('minutes')">Dakika</th>
+        </tr></thead>
+        <tbody id="ov-body"><tr><td colspan="12" class="loading">Yükleniyor...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+  <div id="ov-detail"></div>
+</div>
+
+<!-- ATTACK -->
+<div id="tab-attack" class="section">
+  <h2>Hücum İstatistikleri</h2>
+  <p class="desc">Gol tipleri, şut analizi, penaltı, serbest vuruş</p>
+  <div class="card">
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr>
+          <th>Oyuncu</th><th>Gol</th><th>Asist</th>
+          <th>Şut</th><th>İsabetli Şut</th><th>Şut%</th>
+          <th>Kafa Gol</th><th>Penaltı Gol</th><th>FK Gol</th><th>Bisiklet</th>
+          <th>Hat-trick</th><th>Büyük Fırsat Kaç.</th><th>Penaltı Kazanılan</th>
+          <th>Penaltı Kaçırılan</th><th>Ceza Sahası Dok.</th>
+        </tr></thead>
+        <tbody id="atk-body"><tr><td colspan="15" class="loading">Yükleniyor...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- DEFENSE -->
+<div id="tab-defense" class="section">
+  <h2>Savunma İstatistikleri</h2>
+  <p class="desc">Top kapma, araya girme, blok, kale boşaltma, hava topu</p>
+  <div class="card">
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr>
+          <th>Oyuncu</th><th>Pos</th>
+          <th>Top Kapma</th><th>Kazanılan</th><th>Kapma%</th>
+          <th>Araya Girme</th><th>Blok</th><th>Kale Boşaltma</th>
+          <th>Hava Top.</th><th>Kazanılan</th><th>Hava%</th>
+          <th>Kafa Kazanılan</th><th>Faul Yapılan</th><th>Faul Kazanılan</th>
+          <th>Ofsayt</th><th>Sarı Kart</th><th>Clean Sheet GK</th><th>Clean Sheet DEF</th>
+        </tr></thead>
+        <tbody id="def-body"><tr><td colspan="18" class="loading">Yükleniyor...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PASSING -->
+<div id="tab-passing" class="section">
+  <h2>Pas & Yaratıcılık</h2>
+  <p class="desc">Pas istatistikleri, kilit pas, şans yaratma, orta, uzun pas</p>
+  <div class="card">
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr>
+          <th>Oyuncu</th>
+          <th>Pas Att.</th><th>Başarılı</th><th>Pas%</th>
+          <th>Uzun Pas Att.</th><th>Uzun Pas Başarılı</th>
+          <th>İsabetli Pas</th><th>Kilit Pas</th><th>Şans Yaratma</th>
+          <th>Orta Att.</th><th>Orta Başarılı</th>
+          <th>Son Pas</th><th>Dribling Att.</th><th>Dribling Başarılı</th><th>Drib%</th>
+          <th>Pozisyon Kaybı</th><th>Ele Geçirme</th>
+        </tr></thead>
+        <tbody id="pas-body"><tr><td colspan="17" class="loading">Yükleniyor...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- PHYSICAL -->
+<div id="tab-physical" class="section">
+  <h2>Fiziksel & Genel</h2>
+  <p class="desc">Sürat, mesafe, ikili mücadele, top dokunuşu</p>
+  <div class="card">
+    <div class="tbl-scroll">
+      <table>
+        <thead><tr>
+          <th>Oyuncu</th>
+          <th>Sprint</th><th>Toplam Mesafe</th><th>Sprint Mesafesi</th>
+          <th>Dokunuş</th><th>Ele Geçirme</th>
+          <th>Yer Müc. Att.</th><th>Yer Müc. Kazanılan</th>
+          <th>Hava Müc. Att.</th><th>Hava Müc. Kazanılan</th><th>Hava%</th>
+          <th>Müc. Kaybı</th><th>Pozisyon Kaybı</th>
+          <th>Dakika</th>
+        </tr></thead>
+        <tbody id="phy-body"><tr><td colspan="14" class="loading">Yükleniyor...</td></tr></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- MATCHES -->
+<div id="tab-matches" class="section">
+  <h2>Son Maçlar</h2>
+  <p class="desc">EA API'den çekilen lig maçları</p>
+  <div class="card" id="matches-list"><div class="loading">Yükleniyor...</div></div>
+  <div id="match-detail-area"></div>
+</div>
+
+<script>
+let allData = [];
+let ovSort = 'games', ovDir = -1;
+
+function showTab(id) {
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  document.getElementById('tab-'+id).classList.add('active');
+  event.currentTarget.classList.add('active');
+  if(id==='matches') loadMatches();
+  renderAll();
+}
+
+async function api(path){ return (await fetch(path)).json(); }
+
+function posLabel(pos){
+  const p=(pos||'').toLowerCase();
+  if(p.includes('forward'))  return '<span class="pos-badge pos-fw">FW</span>';
+  if(p.includes('midfielder'))return '<span class="pos-badge pos-mf">MF</span>';
+  if(p.includes('defender')) return '<span class="pos-badge pos-df">DF</span>';
+  if(p.includes('goalkeeper'))return '<span class="pos-badge pos-gk">GK</span>';
+  return '';
+}
+
+function rClass(r){
+  if(r>=8.0) return 'rg';
+  if(r>=7.5) return 'rb';
+  if(r>=7.0) return 'ra';
+  if(r>0)    return 'rr';
+  return 'rm';
+}
+
+function bar(v, max, col){
+  const w=max>0?Math.min(100,Math.round(v/max*100)):0;
+  return `<div class="bar-w"><span>${typeof v==='number'&&!Number.isInteger(v)?v.toFixed(2):v}</span><div class="bar-bg"><div class="bar-f" style="width:${w}%;background:${col}"></div></div></div>`;
+}
+
+function pct(v){ return v>0?v+'%':'—'; }
+function num(v){ return v>0?v:'—'; }
+
+// ─── STATUS ──────────────────────────────────────────────────────────────────
+async function loadStatus(){
+  try{
+    const s=await api('/api/status');
+    const lf=s.last_fetch?new Date(s.last_fetch.fetched_at).toLocaleTimeString('tr-TR'):'—';
+    document.getElementById('status-bar').innerHTML=`
+      <div class="si"><span class="dot"></span>Bağlı</div>
+      <div class="si"><strong>${s.matches}</strong> maç</div>
+      <div class="si"><strong>${s.players}</strong> oyuncu</div>
+      <div class="si">Son çekim: <strong>${lf}</strong></div>
+      <button class="fetch-btn" onclick="fetchNow()">Şimdi Fetch Et</button>`;
+  }catch{
+    document.getElementById('status-bar').innerHTML=
+      '<div class="si"><span class="dot off"></span><span style="color:var(--red)">Sunucuya bağlanılamadı — python3 server.py çalışıyor mu?</span></div>';
+  }
+}
+
+// ─── DATA ─────────────────────────────────────────────────────────────────────
+async function loadData(){
+  try{
+    allData = await api('/api/stats');
+    renderAll();
+    buildSummaryCards();
+  }catch(e){
+    document.getElementById('ov-body').innerHTML='<tr><td colspan="12" class="empty">Sunucuya bağlanılamadı.</td></tr>';
+  }
+}
+
+function buildSummaryCards(){
+  const a=allData.filter(p=>p.games>0);
+  if(!a.length) return;
+  const items=[
+    {l:'Toplam Gol',   v:a.reduce((s,p)=>s+p.goals,0),  c:'var(--green)'},
+    {l:'Toplam Asist', v:a.reduce((s,p)=>s+p.assists,0), c:'var(--blue)'},
+    {l:'Toplam Maç',   v:Math.max(...a.map(p=>p.games)),  c:'var(--amber)'},
+    {l:'Ort. Rating',  v:(a.filter(p=>p.avg_rating>0).reduce((s,p)=>s+p.avg_rating,0)/a.filter(p=>p.avg_rating>0).length).toFixed(2), c:'var(--purple)'},
+  ];
+  document.getElementById('summary-cards').innerHTML=items.map(i=>
+    `<div class="mc"><div class="lbl">${i.l}</div><div class="val" style="color:${i.c}">${i.v}</div></div>`
+  ).join('');
+}
+
+// ─── OVERVIEW ─────────────────────────────────────────────────────────────────
+function ovSetSort(k){
+  document.getElementById('ov-sort').value=k;
+  if(ovSort===k) ovDir*=-1; else{ovSort=k;ovDir=-1;}
+  renderOverview();
+}
+
+function renderOverview(){
+  if(!allData.length) return;
+  const min=parseInt(document.getElementById('ov-min').value);
+  let rows=[...allData].filter(p=>p.games>=min);
+  rows.sort((a,b)=>{
+    const av=a[ovSort],bv=b[ovSort];
+    if(typeof av==='string') return ovDir*av.localeCompare(bv,'tr');
+    return ovDir*(av-bv);
+  });
+  const maxG=Math.max(...rows.map(r=>r.gpg));
+  const maxA=Math.max(...rows.map(r=>r.apg));
+  const ths=['player_name','games','goals','assists','mom','avg_rating','winrate','pass_pct','shot_pct','gpg','apg','minutes'];
+  ths.forEach(k=>{
+    const th=document.querySelector(`#ov-table th[onclick="ovSetSort('${k}')"]`);
+    if(th){const b=th.textContent.replace(/[↓↑]/g,'').trim();th.textContent=b+(k===ovSort?(ovDir===-1?' ↓':' ↑'):'');th.classList.toggle('act',k===ovSort);}
+  });
+  document.getElementById('ov-body').innerHTML=rows.length
+    ?rows.map(p=>`<tr onclick="showPlayerDetail('${p.player_name}','ov-detail')">
+      <td>${p.player_name}${posLabel(p.position)}</td>
+      <td>${p.games}</td><td>${p.goals}</td><td>${p.assists}</td><td>${p.motm}</td>
+      <td class="${rClass(p.avg_rating)}">${p.avg_rating>0?p.avg_rating.toFixed(1):'—'}</td>
+      <td>${pct(p.winrate)}</td><td>${pct(p.pass_pct)}</td><td>${pct(p.shot_pct)}</td>
+      <td>${bar(p.gpg,maxG,'#2dce89')}</td>
+      <td>${bar(p.apg,maxA,'#4da6ff')}</td>
+      <td>${p.minutes}</td>
+    </tr>`).join('')
+    :'<tr><td colspan="12" class="empty">Henüz veri yok.</td></tr>';
+}
+
+// ─── ATTACK ───────────────────────────────────────────────────────────────────
+function renderAttack(){
+  if(!allData.length) return;
+  const rows=[...allData].filter(p=>p.games>0).sort((a,b)=>b.goals-a.goals);
+  document.getElementById('atk-body').innerHTML=rows.map(p=>`<tr>
+    <td>${p.player_name}${posLabel(p.position)}</td>
+    <td>${p.goals}</td><td>${p.assists}</td>
+    <td>${num(p.shots)}</td><td>${num(p.shots_on_target)}</td><td>${pct(p.shot_pct)}</td>
+    <td>${num(p.headed_goals)}</td><td>${num(p.penalties_scored)}</td>
+    <td>${num(p.freekicks_scored)}</td><td>${num(p.bicycle_kick_goals)}</td>
+    <td>${num(p.hat_tricks)}</td><td>${num(p.big_chances_missed)}</td>
+    <td>${num(p.penalties_won)}</td><td>${num(p.penalties_missed)}</td>
+    <td>${num(p.touches_in_box)}</td>
+  </tr>`).join('');
+}
+
+// ─── DEFENSE ──────────────────────────────────────────────────────────────────
+function renderDefense(){
+  if(!allData.length) return;
+  const rows=[...allData].filter(p=>p.games>0).sort((a,b)=>b.interceptions-a.interceptions);
+  document.getElementById('def-body').innerHTML=rows.map(p=>`<tr>
+    <td>${p.player_name}</td><td>${posLabel(p.position)||'—'}</td>
+    <td>${num(p.tackle_attempts)}</td><td>${num(p.tackles_made)}</td><td>${pct(p.tackle_pct)}</td>
+    <td>${num(p.interceptions)}</td><td>${num(p.blocks)}</td><td>${num(p.clearances)}</td>
+    <td>${num(p.aerial_duels_attempted)}</td><td>${num(p.aerial_duels_won)}</td><td>${pct(p.aerial_pct)}</td>
+    <td>${num(p.headers_won)}</td>
+    <td>${num(p.fouls_committed)}</td><td>${num(p.fouls_won)}</td>
+    <td>${num(p.offsides)}</td><td>${num(p.yellow_cards)}</td>
+    <td>${num(p.clean_sheet_gk)}</td><td>${num(p.clean_sheet_def)}</td>
+  </tr>`).join('');
+}
+
+// ─── PASSING ──────────────────────────────────────────────────────────────────
+function renderPassing(){
+  if(!allData.length) return;
+  const rows=[...allData].filter(p=>p.games>0).sort((a,b)=>b.key_passes-a.key_passes);
+  document.getElementById('pas-body').innerHTML=rows.map(p=>`<tr>
+    <td>${p.player_name}${posLabel(p.position)}</td>
+    <td>${num(p.pass_attempts)}</td><td>${num(p.passes_made)}</td><td>${pct(p.pass_pct)}</td>
+    <td>${num(p.long_passes_attempted)}</td><td>${num(p.long_passes_completed)}</td>
+    <td>${num(p.accurate_passes)}</td><td>${num(p.key_passes)}</td><td>${num(p.chances_created)}</td>
+    <td>${num(p.crosses_attempted)}</td><td>${num(p.crosses_completed)}</td>
+    <td>${num(p.through_balls)}</td>
+    <td>${num(p.dribbles_attempted)}</td><td>${num(p.dribbles_completed)}</td><td>${pct(p.dribble_pct)}</td>
+    <td>${num(p.possession_lost)}</td><td>${num(p.possession_won)}</td>
+  </tr>`).join('');
+}
+
+// ─── PHYSICAL ─────────────────────────────────────────────────────────────────
+function renderPhysical(){
+  if(!allData.length) return;
+  const rows=[...allData].filter(p=>p.games>0).sort((a,b)=>b.sprints-a.sprints);
+  document.getElementById('phy-body').innerHTML=rows.map(p=>`<tr>
+    <td>${p.player_name}${posLabel(p.position)}</td>
+    <td>${num(p.sprints)}</td>
+    <td>${p.distance_total_km>0?p.distance_total_km+' km':'—'}</td>
+    <td>${num(p.distance_sprint_km)}</td>
+    <td>${num(p.touches)}</td><td>${num(p.possession_won)}</td>
+    <td>${num(p.ground_duels_attempted)}</td><td>${num(p.ground_duels_won)}</td>
+    <td>${num(p.aerial_duels_attempted)}</td><td>${num(p.aerial_duels_won)}</td><td>${pct(p.aerial_pct)}</td>
+    <td>${num(p.duels_lost)}</td><td>${num(p.dispossessed)}</td>
+    <td>${p.minutes}</td>
+  </tr>`).join('');
+}
+
+function renderAll(){
+  renderOverview();
+  renderAttack();
+  renderDefense();
+  renderPassing();
+  renderPhysical();
+}
+
+// ─── PLAYER DETAIL ────────────────────────────────────────────────────────────
+function showPlayerDetail(name, containerId){
+  const p=allData.find(x=>x.player_name===name);
+  if(!p) return;
+  const items=[
+    ['Maç',p.games],['Gol',p.goals],['Asist',p.assists],['MOTM',p.motm],
+    ['Rating',p.avg_rating?p.avg_rating.toFixed(1):'—'],['Galiyet%',pct(p.winrate)],
+    ['Gol/maç',p.gpg.toFixed(2)],['Ast/maç',p.apg.toFixed(2)],
+    ['Pas%',pct(p.pass_pct)],['Şut%',pct(p.shot_pct)],
+    ['Kilit Pas',p.key_passes],['Araya Girme',p.interceptions],
+    ['Top Kapma',p.tackles_made],['Hava Müc.',p.aerial_duels_won+'/'+p.aerial_duels_attempted],
+    ['Dribling%',pct(p.dribble_pct)],['Sprint',p.sprints],
+    ['Dakika',p.minutes],['Sarı Kart',p.yellow_cards],
+  ];
+  document.getElementById(containerId).innerHTML=`
+    <div class="detail-box">
+      <button class="close-btn" onclick="document.getElementById('${containerId}').innerHTML=''">✕</button>
+      <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.3rem;font-weight:700;margin-bottom:1rem">
+        ${p.player_name} ${posLabel(p.position)}
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px">
+        ${items.map(([l,v])=>`<div class="mc"><div class="lbl">${l}</div><div style="font-family:'Barlow Condensed',sans-serif;font-size:1.4rem;font-weight:700">${v}</div></div>`).join('')}
+      </div>
+    </div>`;
+  document.getElementById(containerId).scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+
+// ─── MATCHES ──────────────────────────────────────────────────────────────────
+async function loadMatches(){
+  try{
+    const matches=await api('/api/recent-matches');
+    const el=document.getElementById('matches-list');
+    if(!matches.length){el.innerHTML='<div class="empty">Henüz maç verisi yok.</div>';return;}
+    el.innerHTML='<div class="card-title">Son Maçlar</div>'+matches.map(m=>{
+      const date=new Date(m.timestamp*1000).toLocaleDateString('tr-TR',{day:'2-digit',month:'short',hour:'2-digit',minute:'2-digit'});
+      const bc=m.outcome==='W'?'bw':m.outcome==='L'?'bl':'bd';
+      const bl=m.outcome==='W'?'Galibiyet':m.outcome==='L'?'Mağlubiyet':'Beraberlik';
+      return `<div class="match-row" onclick="loadMatchDetail('${m.match_id}')">
+        <div><span class="badge ${bc}">${bl}</span> <span style="font-size:13px">${m.result}</span></div>
+        <div class="match-meta">${date}</div>
+      </div>`;
+    }).join('');
+  }catch{document.getElementById('matches-list').innerHTML='<div class="empty">Bağlanılamadı.</div>';}
+}
+
+async function loadMatchDetail(mid){
+  try{
+    const players=await api('/api/match/'+mid);
+    if(!players.length) return;
+    document.getElementById('match-detail-area').innerHTML=`
+      <div class="detail-box" style="margin-top:1rem">
+        <button class="close-btn" onclick="document.getElementById('match-detail-area').innerHTML=''">✕</button>
+        <div style="font-family:'Barlow Condensed',sans-serif;font-size:1.2rem;font-weight:700;margin-bottom:1rem">Maç Detayı</div>
+        <div class="tbl-scroll"><table>
+          <thead><tr>
+            <th>Oyuncu</th><th>Pos</th><th>Gol</th><th>Asist</th>
+            <th>Şut</th><th>İsabetli Şut</th><th>Pas Att.</th><th>Başarılı</th>
+            <th>Top Kapma</th><th>Araya Girme</th><th>Blok</th>
+            <th>Drib.</th><th>Hava M.</th><th>Kilit Pas</th>
+            <th>Şans Yarat.</th><th>Ceza Dok.</th><th>Rating</th><th>MOTM</th>
+          </tr></thead>
+          <tbody>
+            ${players.map(p=>{
+              const pa=p.pass_attempts>0?Math.round(p.passes_made/p.pass_attempts*100):0;
+              return `<tr>
+                <td style="font-weight:500">${p.player_name}</td>
+                <td>${posLabel(p.position)||'—'}</td>
+                <td>${p.goals}</td><td>${p.assists}</td>
+                <td>${p.shots}</td><td>${p.shots_on_target||0}</td>
+                <td>${p.pass_attempts}</td><td>${pa>0?pa+'%':'—'}</td>
+                <td>${p.tackles_made}/${p.tackle_attempts}</td>
+                <td>${num(p.interceptions)}</td><td>${num(p.blocks)}</td>
+                <td>${p.dribbles_completed||0}/${p.dribbles_attempted||0}</td>
+                <td>${p.aerial_duels_won||0}/${p.aerial_duels_attempted||0}</td>
+                <td>${num(p.key_passes)}</td><td>${num(p.chances_created)}</td>
+                <td>${num(p.touches_in_box)}</td>
+                <td class="${rClass(parseFloat(p.rating))}">${parseFloat(p.rating).toFixed(1)}</td>
+                <td>${p.motm?'★':''}</td>
+              </tr>`;
+            }).join('')}
+          </tbody>
+        </table></div>
+      </div>`;
+    document.getElementById('match-detail-area').scrollIntoView({behavior:'smooth',block:'nearest'});
+  }catch(e){}
+}
+
+// ─── FETCH ────────────────────────────────────────────────────────────────────
+async function fetchNow(){
+  const btns=document.querySelectorAll('.fetch-btn');
+  btns.forEach(b=>{b.disabled=true;b.textContent='Fetching...';});
+  try{
+    const r=await api('/api/fetch-now');
+    await Promise.all([loadData(),loadStatus()]);
+    console.log(r.new_matches+' new match(es)');
+  }catch(e){}
+  btns.forEach(b=>{b.disabled=false;b.textContent='Şimdi Fetch Et';});
+}
+
+// ─── INIT ─────────────────────────────────────────────────────────────────────
+
+
+loadStatus();
+loadData();
+setInterval(()=>{loadData();loadStatus();}, 30000);
+</script>
+</body>
+</html>
